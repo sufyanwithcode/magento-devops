@@ -1,0 +1,13 @@
+# Secrets — never commit real env
+.env
+
+# Magento application code (large; installed via Composer)
+/src/
+
+# MySQL data volume
+docker/mysql/data/
+
+# Logs & OS cruft
+*.log
+.DS_Store
+*.swp
