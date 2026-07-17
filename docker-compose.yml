@@ -1,0 +1,90 @@
+name: magento-devops
+
+services:
+  # ================= TIER 1 — WEB / PRESENTATION =================
+  varnish:
+    build: ./docker/varnish
+    depends_on:
+      - nginx
+    ports:
+      - "80:80"
+    networks:
+      - frontend
+
+  nginx:
+    build: ./docker/nginx
+    depends_on:
+      - php
+    volumes:
+      - ./src:/var/www/html:ro
+    networks:
+      - frontend
+      - backend
+
+  # ================= TIER 2 — APPLICATION =================
+  php:
+    build: ./docker/php
+    env_file: .env
+    depends_on:
+      - mysql
+      - redis
+      - opensearch
+      - rabbitmq
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - backend
+
+  # ================= TIER 3 — DATA =================
+  mysql:
+    image: mysql:8.0
+    command: --mysql-native-password=ON
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/magento.cnf:ro
+      - dbdata:/var/lib/mysql
+    networks:
+      - backend
+
+  redis:
+    image: redis:7-alpine
+    networks:
+      - backend
+
+  opensearch:
+    image: opensearchproject/opensearch:2.12.0
+    environment:
+      - discovery.type=single-node
+      - DISABLE_SECURITY_PLUGIN=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - osdata:/usr/share/opensearch/data
+    networks:
+      - backend
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    networks:
+      - backend
+
+networks:
+  frontend:
+  backend:
+
+volumes:
+  dbdata:
+  osdata:

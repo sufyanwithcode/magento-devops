@@ -1,11 +1,18 @@
 # Secrets — never commit real env
 .env
 
-# Magento application code (large; installed via Composer)
-/src/
+# Local compose override
+docker-compose.override.yml
 
-# MySQL data volume
+# Magento application code (installed via Composer, large)
+/src/*
+!/src/.gitkeep
+
+# Container data
 docker/mysql/data/
+
+# Backup dumps
+backups/dumps/
 
 # Logs & OS cruft
 *.log

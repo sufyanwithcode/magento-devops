@@ -1,0 +1,10 @@
+# Copy to docker-compose.override.yml for LOCAL development.
+# Compose merges this on top of docker-compose.yml automatically.
+services:
+  php:
+    environment:
+      MAGE_MODE: "developer"
+  # Expose Nginx directly on 8080 to bypass Varnish while debugging:
+  nginx:
+    ports:
+      - "8080:80"
